@@ -5,7 +5,6 @@ import { faAngleDoubleRight } from '@fortawesome/free-solid-svg-icons';
 import { Jumbotron, Button, Form, Col, Spinner, Alert, Modal } from 'react-bootstrap';
 import Currencies from './Currencies';
 
-
 function Converter() {
 
   const [ amount, setAmount ] = useState('1');
