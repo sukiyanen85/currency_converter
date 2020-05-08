@@ -3,14 +3,25 @@ import './Converter.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAngleDoubleRight } from '@fortawesome/free-solid-svg-icons';
 import { Jumbotron, Button, Form, Col, Spinner, Alert, Modal } from 'react-bootstrap';
+import axios from 'axios';
 import Currencies from './Currencies';
 
 function Converter() {
+  /** Fixer.io Credentials */
+
+  const FIXER_URL = 'http://data.fixer.io/api/latest?access_key=';
+  const FIXER_KEY = '9f9084ab402e69167dd50cde460a8a33';
+
+  /** Component variables */
 
   const [ amount, setAmount ] = useState('1');
   const [ firstCurrency, setFirstCurrency ]   = useState('EUR');
   const [ secondCurrency, setSecondCurrency ] = useState('GBP');
   const [ showSpinner, setShowSpinner] = useState(false);
+  const [ formValidated, setFormValidated ] = useState(false);
+  const [ showModal, setShowModal ] = useState(false);
+  const [ showAlert, setAlert ] = useState(false);
+  const [ currencyConvertion, setCurrencyConvertion ] = useState('');
 
   function handleAmount(event){
     const re = /^[0-9]*\.?[0-9]*$/;
@@ -20,8 +31,14 @@ function Converter() {
     // if value is not blank, then test the regex
 
     if (value === '' || re.test(value)) {
-      setAmount(event.target.value);
+      setAmount(value);
     }
+  }
+
+  function closeModal(){
+    setShowModal(false);
+    setAmount('1');
+    setFormValidated(false);
   }
 
   function handleFirstCurrency(event){
@@ -36,16 +53,55 @@ function Converter() {
     setShowSpinner(show);
   }
 
+  function handleConversion(data){
+      /** In case the data provided from the API is invalid */
+      if(!data || data.success !== true){
+        return false;
+      }
+
+      const rateFirstCurrency  = data.rates[firstCurrency];
+      const rateSecondCurrency = data.rates[secondCurrency];
+
+      return (( 1 / rateFirstCurrency * rateSecondCurrency) * amount).toFixed(2);
+  }
+
+  function formSubmited(event){
+    event.preventDefault();
+    setFormValidated(true);
+
+    if( event.currentTarget.checkValidity() === true) { // If the form is validated
+        //TODO Make call to the fixer.io API
+        setShowSpinner(true);
+        axios.get(FIXER_URL + FIXER_KEY)
+          .catch(res => {
+              setAlert(true);
+          })
+          .then(res => {
+            const converted = handleConversion(res.data);
+            if(converted){
+              setAlert(false);
+              setCurrencyConvertion();
+              setShowModal(true);
+            }
+            else {
+              setAlert(true);
+            }
+          });
+
+          setShowSpinner(false);
+    }
+  }
+
   return (
     <>
         <h1>Converter</h1>
         
-        <Alert variant="danger" show={true}>
+        <Alert variant="danger" show={showAlert}>
           Ups! An error occurred, could not fetch the convertion from fixer API
         </Alert>
 
         <Jumbotron>
-          <Form>
+          <Form onSubmit={formSubmited} noValidate validated={formValidated}>
             <Form.Row>
               <Col sm="3">
                   <Form.Control type="text" placeholder="0" onChange={handleAmount} value={amount} required />
@@ -77,13 +133,13 @@ function Converter() {
            </Form>
         </Jumbotron>
 
-        <Modal show={false}>
+        <Modal show={showModal} onHide={closeModal}>
           <Modal.Header closeButton>
             <Modal.Title>Requesting convertion</Modal.Title>
           </Modal.Header>
-          <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
+          <Modal.Body>{amount} {firstCurrency} = {currencyConvertion} {secondCurrency}</Modal.Body>
           <Modal.Footer>
-            <Button variant="success">
+            <Button variant="success" onClick={closeModal}>
               Close
             </Button>
           </Modal.Footer>
