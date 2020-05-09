@@ -80,7 +80,7 @@ function Converter() {
             const converted = handleConversion(res.data);
             if(converted){
               setAlert(false);
-              setCurrencyConvertion();
+              setCurrencyConvertion(converted);
               setShowModal(true);
             }
             else {
@@ -120,7 +120,7 @@ function Converter() {
               </Form.Control>
               </Col>
               <Col sm="2">
-                <Button variant="success" type="submit">
+                <Button variant="success" type="submit" data-testid="btn-convert">
                   <span className={!showSpinner ? 'hidden' : null}>
                     <Spinner animation="border" size="sm"></Spinner>
                   </span>
@@ -133,7 +133,7 @@ function Converter() {
            </Form>
         </Jumbotron>
 
-        <Modal show={showModal} onHide={closeModal}>
+        <Modal show={showModal} onHide={closeModal} data-testid="modal">
           <Modal.Header closeButton>
             <Modal.Title>Requesting convertion</Modal.Title>
           </Modal.Header>
